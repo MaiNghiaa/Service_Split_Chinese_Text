@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  fastapi-app:
+    build: .
+    container_name: fastapi-segment
+    ports:
+      - "8058:8058"     # Truy cập ngoài:8058 -> container:8058
+    volumes:
+      - ./cedict_ts.u8:/app/cedict_ts.u8  # Mount từ điển vào đúng vị trí
+    restart: always
+    # Tối ưu hóa resource cho máy yếu
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'      # Giới hạn 0.5 CPU core (50% của 1 core)
+          memory: 256M     # Giới hạn 256MB RAM
+        reservations:
+          cpus: '0.2'      # Đảm bảo 0.2 CPU core (20%)
+          memory: 128M     # Đảm bảo 128MB RAM
+    # Tối ưu hóa logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"     # Giảm log size
+        max-file: "2"      # Giảm số file log
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8058/health"]
+      interval: 60s        # Tăng interval
+      timeout: 15s         # Tăng timeout
+      retries: 2           # Giảm retries
+      start_period: 60s    # Tăng start period
+
